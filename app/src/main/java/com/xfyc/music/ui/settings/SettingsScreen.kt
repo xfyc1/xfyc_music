@@ -15,6 +15,7 @@ import com.xfyc.music.domain.model.PlayMode
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    onNavigateToMusicSources: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val defaultPlayMode by viewModel.defaultPlayMode.collectAsState()
@@ -84,6 +85,22 @@ fun SettingsScreen(
                             onCheckedChange = { viewModel.setScanOnStartup(it) }
                         )
                     }
+                )
+            }
+
+            // Online music section
+            item {
+                SectionTitle("在线音乐")
+            }
+
+            item {
+                ListItem(
+                    headlineContent = { Text("音乐源管理") },
+                    supportingContent = { Text("添加和管理在线音乐源") },
+                    leadingContent = {
+                        Icon(Icons.Default.Cloud, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable { onNavigateToMusicSources() }
                 )
             }
 

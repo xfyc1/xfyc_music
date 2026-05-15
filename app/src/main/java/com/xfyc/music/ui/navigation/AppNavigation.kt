@@ -171,7 +171,11 @@ fun AppNavigation(
             }
 
             composable(Routes.SETTINGS) {
-                SettingsScreen()
+                SettingsScreen(
+                    onNavigateToMusicSources = {
+                        navController.navigate(Routes.MUSIC_SOURCES)
+                    }
+                )
             }
 
             composable(Routes.MUSIC_SOURCES) {
