@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SongDao {
 
-    @Query("SELECT * FROM songs ORDER BY title ASC")
+    @Query("SELECT * FROM songs WHERE inLibrary = 1 ORDER BY title ASC")
     fun getAllSongs(): Flow<List<SongEntity>>
 
     @Query("SELECT * FROM songs WHERE id = :id")
@@ -25,22 +25,22 @@ interface SongDao {
     @Query("SELECT * FROM songs WHERE lastPlayedAt IS NOT NULL ORDER BY lastPlayedAt DESC LIMIT :limit")
     fun getRecentSongs(limit: Int = 20): Flow<List<SongEntity>>
 
-    @Query("SELECT DISTINCT artist FROM songs WHERE artist != '' ORDER BY artist ASC")
+    @Query("SELECT DISTINCT artist FROM songs WHERE inLibrary = 1 AND artist != '' ORDER BY artist ASC")
     fun getArtists(): Flow<List<String>>
 
-    @Query("SELECT DISTINCT album FROM songs WHERE album != '' ORDER BY album ASC")
+    @Query("SELECT DISTINCT album FROM songs WHERE inLibrary = 1 AND album != '' ORDER BY album ASC")
     fun getAlbums(): Flow<List<String>>
 
-    @Query("SELECT * FROM songs WHERE artist = :artist ORDER BY album, title ASC")
+    @Query("SELECT * FROM songs WHERE inLibrary = 1 AND artist = :artist ORDER BY album, title ASC")
     fun getSongsByArtist(artist: String): Flow<List<SongEntity>>
 
-    @Query("SELECT * FROM songs WHERE album = :album ORDER BY title ASC")
+    @Query("SELECT * FROM songs WHERE inLibrary = 1 AND album = :album ORDER BY title ASC")
     fun getSongsByAlbum(album: String): Flow<List<SongEntity>>
 
-    @Query("SELECT * FROM songs WHERE title LIKE '%' || :query || '%' OR artist LIKE '%' || :query || '%' OR album LIKE '%' || :query || '%'")
+    @Query("SELECT * FROM songs WHERE inLibrary = 1 AND (title LIKE '%' || :query || '%' OR artist LIKE '%' || :query || '%' OR album LIKE '%' || :query || '%')")
     fun searchSongs(query: String): Flow<List<SongEntity>>
 
-    @Query("SELECT COUNT(*) FROM songs")
+    @Query("SELECT COUNT(*) FROM songs WHERE inLibrary = 1")
     suspend fun getSongCount(): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -52,7 +52,7 @@ interface SongDao {
     @Update
     suspend fun updateSong(song: SongEntity)
 
-    @Query("UPDATE songs SET isFavorite = :favorite, updatedAt = :updatedAt WHERE id = :id")
+    @Query("UPDATE songs SET isFavorite = :favorite, inLibrary = 1, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setFavorite(id: Long, favorite: Boolean, updatedAt: Long = System.currentTimeMillis())
 
     @Query("UPDATE songs SET lastPlayedAt = :timestamp WHERE id = :id")

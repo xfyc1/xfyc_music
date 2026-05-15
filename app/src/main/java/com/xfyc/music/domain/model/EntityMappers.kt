@@ -20,6 +20,7 @@ fun SongEntity.toDomainModel(): Song = Song(
     bitrate = bitrate,
     fileSize = fileSize,
     isFavorite = isFavorite,
+    inLibrary = inLibrary,
     lastPlayedAt = lastPlayedAt
 )
 

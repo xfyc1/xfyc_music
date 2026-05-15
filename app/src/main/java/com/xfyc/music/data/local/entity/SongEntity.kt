@@ -30,6 +30,7 @@ data class SongEntity(
     val bitrate: Int,
     val fileSize: Long,
     val isFavorite: Boolean = false,
+    val inLibrary: Boolean = true,
     val lastPlayedAt: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

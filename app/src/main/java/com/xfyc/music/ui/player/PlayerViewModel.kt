@@ -142,7 +142,7 @@ class PlayerViewModel @Inject constructor(
                 songRepository.setLastPlayed(song.id)
                 playSongIds(listOf(song.id), 0)
             } else {
-                val songId = songRepository.upsertRemoteSong(song)
+                val songId = songRepository.upsertRemoteSong(song, inLibrary = false)
                 playSongIds(listOf(songId), 0)
             }
         }
@@ -154,7 +154,7 @@ class PlayerViewModel @Inject constructor(
                 if (song.isLocal) {
                     song.id
                 } else {
-                    songRepository.upsertRemoteSong(song)
+                    songRepository.upsertRemoteSong(song, inLibrary = false)
                 }
             }
             if (ids.isNotEmpty()) {

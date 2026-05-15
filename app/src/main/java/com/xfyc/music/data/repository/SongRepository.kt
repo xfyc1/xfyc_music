@@ -45,21 +45,22 @@ class SongRepository @Inject constructor(
 
     suspend fun updateSong(song: SongEntity) = songDao.updateSong(song)
 
-    suspend fun upsertRemoteSong(song: Song): Long {
-        val sourceId = song.sourceId ?: return songDao.insertSong(song.toRemoteEntity())
+    suspend fun upsertRemoteSong(song: Song, inLibrary: Boolean = false): Long {
+        val sourceId = song.sourceId ?: return songDao.insertSong(song.toRemoteEntity(inLibrary))
         val existing = songDao.getRemoteSongBySourceId(sourceId)
         if (existing != null) {
             songDao.updateSong(
-                song.toRemoteEntity().copy(
+                song.toRemoteEntity(inLibrary).copy(
                     id = existing.id,
                     isFavorite = existing.isFavorite,
                     lastPlayedAt = existing.lastPlayedAt,
+                    inLibrary = existing.inLibrary || inLibrary,
                     createdAt = existing.createdAt
                 )
             )
             return existing.id
         }
-        return songDao.insertSong(song.toRemoteEntity())
+        return songDao.insertSong(song.toRemoteEntity(inLibrary))
     }
 
     suspend fun scanAndImport(): MediaScanner.ScanResult {
@@ -74,7 +75,7 @@ class SongRepository @Inject constructor(
         return songDao.countByPath(filePath) > 0
     }
 
-    private fun Song.toRemoteEntity(): SongEntity = SongEntity(
+    private fun Song.toRemoteEntity(inLibrary: Boolean = this.inLibrary): SongEntity = SongEntity(
         title = title,
         artist = artist,
         album = album,
@@ -88,6 +89,7 @@ class SongRepository @Inject constructor(
         bitrate = bitrate,
         fileSize = fileSize,
         isFavorite = isFavorite,
+        inLibrary = inLibrary,
         lastPlayedAt = lastPlayedAt
     )
 }

@@ -16,6 +16,7 @@ data class Song(
     val bitrate: Int,
     val fileSize: Long,
     val isFavorite: Boolean = false,
+    val inLibrary: Boolean = true,
     val lastPlayedAt: Long? = null
 ) {
     val durationFormatted: String
