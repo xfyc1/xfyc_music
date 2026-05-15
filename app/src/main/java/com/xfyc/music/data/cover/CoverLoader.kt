@@ -42,12 +42,15 @@ class CoverLoader @Inject constructor(
             try {
                 val cached = cacheManager.getCachedCover(url)
                 if (cached != null) return cached.readBytes()
-
+            } catch (_: Exception) { }
+            try {
                 val response = okHttpClient.newCall(Request.Builder().url(url).build()).execute()
                 if (response.isSuccessful) {
-                    val data = response.body?.bytes() ?: return@let null
-                    cacheManager.saveCover(url, data)
-                    return data
+                    val data = response.body?.bytes()
+                    if (data != null) {
+                        cacheManager.saveCover(url, data)
+                        return data
+                    }
                 }
             } catch (_: Exception) { }
         }

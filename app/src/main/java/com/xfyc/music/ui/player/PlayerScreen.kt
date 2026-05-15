@@ -70,7 +70,8 @@ fun PlayerScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (showLyrics && lyrics != null) {
+            val currentLyrics = lyrics
+            if (showLyrics && currentLyrics != null) {
                 // Lyrics view
                 val listState = rememberLazyListState()
 
@@ -88,7 +89,7 @@ fun PlayerScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     contentPadding = PaddingValues(vertical = 120.dp)
                 ) {
-                    itemsIndexed(lyrics) { index, line ->
+                    itemsIndexed(currentLyrics) { index, line ->
                         val isCurrent = index == currentLyricIndex
                         Text(
                             text = line.text,

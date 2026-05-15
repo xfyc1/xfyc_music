@@ -75,14 +75,8 @@ class MusicService : MediaSessionService() {
     }
 
     private fun updateMetadata(song: com.xfyc.music.data.local.entity.SongEntity) {
-        val metadata = MediaMetadata.Builder()
-            .setTitle(song.title)
-            .setArtist(song.artist)
-            .setAlbumTitle(song.album)
-            .setDurationMillis(song.duration)
-            .setIsPlayable(true)
-            .build()
-        mediaSession?.setMetadata(metadata)
+        // Metadata is set via the MediaItem on the player — no need to set separately
+        // The MediaSession reads metadata from the player's current MediaItem
     }
 
     private inner class MediaSessionCallback : MediaSession.Callback {
