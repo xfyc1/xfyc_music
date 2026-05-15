@@ -48,6 +48,20 @@ class GenericApiAdapter @Inject constructor(
     ): Result<List<Song>> {
         return withContext(Dispatchers.IO) {
             try {
+                // LX Music sources use direct music service API calls
+                if (source.type == "lx_music") {
+                    val sourceId = extractSourceId(source)
+                    val response = when (sourceId) {
+                        "tx" -> searchQQMusic(query, page)
+                        "wy" -> searchNetEaseMusic(query, page)
+                        "kw" -> searchKuwoMusic(query, page)
+                        "kg" -> searchKugouMusic(query, page)
+                        else -> return@withContext Result.failure(Exception("暂不支持该音源搜索: $sourceId"))
+                    }
+                    val songs = parseLxMusicSearchResponse(source, response, sourceId)
+                    return@withContext Result.success(songs)
+                }
+
                 val searchUrl = source.searchUrl
                     ?: return@withContext Result.failure(Exception("搜索 URL 未配置"))
 
@@ -319,5 +333,146 @@ class GenericApiAdapter @Inject constructor(
 
     private fun JsonObject?.getAsJsonArray(key: String): JsonArray? {
         return try { this?.get(key)?.asJsonArray } catch (_: Exception) { null }
+    }
+
+    // --- LX Music direct music service search ---
+
+    private fun extractSourceId(source: MusicSourceEntity): String {
+        return try {
+            val config = source.configJson ?: return ""
+            JsonParser.parseString(config).asJsonObject.getString("sourceId") ?: ""
+        } catch (_: Exception) { "" }
+    }
+
+    private fun searchQQMusic(query: String, page: Int): String {
+        val body = """{"req_1":{"method":"DoSearchForQQMusicDesktop","module":"music.search.SearchCgiService","param":{"num_per_page":20,"page_num":${page - 1},"query":"$query","search_type":0}}}"""
+        val request = Request.Builder()
+            .url("https://u.y.qq.com/cgi-bin/musicu.fcg")
+            .post(body.toRequestBody("application/json".toMediaType()))
+            .header("Referer", "https://y.qq.com")
+            .build()
+        val response = okHttpClient.newCall(request).execute()
+        if (!response.isSuccessful) throw Exception("QQ音乐搜索失败: ${response.code}")
+        return response.body?.string() ?: throw Exception("QQ音乐搜索响应为空")
+    }
+
+    private fun searchNetEaseMusic(query: String, page: Int): String {
+        val body = """{"s":"$query","type":1,"limit":20,"offset":${(page - 1) * 20},"total":true}"""
+        val request = Request.Builder()
+            .url("https://music.163.com/api/search/get")
+            .post(body.toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+            .header("Referer", "https://music.163.com")
+            .build()
+        val response = okHttpClient.newCall(request).execute()
+        if (!response.isSuccessful) throw Exception("网易云搜索失败: ${response.code}")
+        return response.body?.string() ?: throw Exception("网易云搜索响应为空")
+    }
+
+    private fun searchKuwoMusic(query: String, page: Int): String {
+        val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+        val request = Request.Builder()
+            .url("https://search.kuwo.cn/r.s?all=$encodedQuery&pn=${page - 1}&rn=20&ft=music&rformat=json&encoding=utf8")
+            .get()
+            .header("Referer", "https://www.kuwo.cn")
+            .build()
+        val response = okHttpClient.newCall(request).execute()
+        if (!response.isSuccessful) throw Exception("酷我搜索失败: ${response.code}")
+        return response.body?.string() ?: throw Exception("酷我搜索响应为空")
+    }
+
+    private fun searchKugouMusic(query: String, page: Int): String {
+        val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+        val request = Request.Builder()
+            .url("https://songsearch.kugou.com/song_search_v2?keyword=$encodedQuery&page=$page&pagesize=20")
+            .get()
+            .header("Referer", "https://www.kugou.com")
+            .build()
+        val response = okHttpClient.newCall(request).execute()
+        if (!response.isSuccessful) throw Exception("酷狗搜索失败: ${response.code}")
+        return response.body?.string() ?: throw Exception("酷狗搜索响应为空")
+    }
+
+    private fun parseLxMusicSearchResponse(source: MusicSourceEntity, json: String, sourceId: String): List<Song> {
+        val root = JsonParser.parseString(json)
+        val items: JsonArray? = when (sourceId) {
+            "tx" -> {
+                root.asJsonObject
+                    ?.getAsJsonObject("req_1")
+                    ?.getAsJsonObject("data")
+                    ?.getAsJsonObject("body")
+                    ?.getAsJsonObject("song")
+                    ?.getAsJsonArray("list")
+            }
+            "wy" -> {
+                root.asJsonObject
+                    ?.getAsJsonObject("result")
+                    ?.getAsJsonArray("songs")
+            }
+            "kw" -> {
+                root.asJsonObject
+                    ?.getAsJsonArray("abslist")
+            }
+            "kg" -> {
+                root.asJsonObject
+                    ?.getAsJsonObject("data")
+                    ?.getAsJsonArray("lists")
+            }
+            else -> null
+        }
+
+        return items?.mapNotNull { element ->
+            val obj = element.asJsonObject
+            when (sourceId) {
+                "tx" -> {
+                    val id = obj.getString("id") ?: obj.getString("songmid") ?: ""
+                    val title = obj.getString("title") ?: obj.getString("name") ?: "未知歌曲"
+                    val artist = obj.getAsJsonArray("singer")?.firstOrNull()?.asJsonObject?.getString("name")
+                        ?: "未知艺术家"
+                    Song(
+                        id = 0, title = title, artist = artist,
+                        album = obj.getAsJsonObject("album")?.getString("title") ?: "",
+                        duration = (obj.getLong("interval") ?: 0L) * 1000,
+                        sourceType = "remote", sourceId = id,
+                        coverUrl = obj.getAsJsonObject("album")?.getString("mid")?.let {
+                            "https://y.gtimg.cn/music/photo_new/T002R800x800M000$it.jpg"
+                        },
+                        format = "MP3", bitrate = 0, fileSize = 0
+                    )
+                }
+                "wy" -> {
+                    Song(
+                        id = 0, title = obj.getString("name") ?: "未知歌曲",
+                        artist = obj.getAsJsonArray("artists")?.firstOrNull()?.asJsonObject?.getString("name") ?: "未知艺术家",
+                        album = obj.getAsJsonObject("album")?.getString("name") ?: "",
+                        duration = (obj.getLong("duration") ?: 0L),
+                        sourceType = "remote", sourceId = obj.getString("id") ?: "",
+                        coverUrl = obj.getAsJsonObject("album")?.getString("picUrl"),
+                        format = "MP3", bitrate = 0, fileSize = 0
+                    )
+                }
+                "kw" -> {
+                    Song(
+                        id = 0, title = obj.getString("SONGNAME") ?: obj.getString("NAME") ?: "未知歌曲",
+                        artist = obj.getString("ARTIST") ?: obj.getString("SINGER") ?: "未知艺术家",
+                        album = obj.getString("ALBUM") ?: "",
+                        duration = (obj.getLong("DURATION") ?: 0L) * 1000,
+                        sourceType = "remote", sourceId = obj.getString("MUSICRID")?.replace("MUSIC_", "") ?: "",
+                        format = "MP3", bitrate = 0, fileSize = 0
+                    )
+                }
+                "kg" -> {
+                    Song(
+                        id = 0, title = obj.getString("SongName") ?: obj.getString("songname") ?: "未知歌曲",
+                        artist = obj.getString("SingerName") ?: obj.getString("singername") ?: "未知艺术家",
+                        album = obj.getString("AlbumName") ?: "",
+                        duration = (obj.getLong("Duration") ?: 0L) * 1000,
+                        sourceType = "remote", sourceId = obj.getString("SQFileHash") ?: obj.getString("FileHash") ?: "",
+                        coverUrl = obj.getString("AlbumID")?.let { "https://imge.kugou.com/stdmusic/$it.jpg" },
+                        format = "MP3", bitrate = 0, fileSize = 0
+                    )
+                }
+                else -> null
+            }
+        } ?: emptyList()
     }
 }
