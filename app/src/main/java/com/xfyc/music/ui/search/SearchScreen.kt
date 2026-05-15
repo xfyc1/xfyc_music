@@ -33,7 +33,7 @@ fun SearchScreen(
                     TextField(
                         value = query,
                         onValueChange = { viewModel.onQueryChange(it) },
-                        placeholder = { Text("Search songs, artists, albums...") },
+                        placeholder = { Text("搜索歌曲、艺术家、专辑…") },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -45,13 +45,13 @@ fun SearchScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                     }
                 },
                 actions = {
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { viewModel.clearSearch() }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            Icon(Icons.Default.Clear, contentDescription = "清除")
                         }
                     }
                 }
@@ -77,7 +77,7 @@ fun SearchScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Type at least 2 characters to search",
+                            "请输入至少2个字符进行搜索",
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -88,7 +88,7 @@ fun SearchScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "No results found",
+                        "未找到结果",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

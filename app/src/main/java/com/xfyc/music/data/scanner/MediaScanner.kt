@@ -67,11 +67,11 @@ class MediaScanner @Inject constructor(
 
                 val artist = cursor.getString(artistCol)
                     ?.takeIf { it.isNotBlank() && it != "<unknown>" }
-                    ?: "Unknown Artist"
+                    ?: "未知艺术家"
 
                 val album = cursor.getString(albumCol)
                     ?.takeIf { it.isNotBlank() && it != "<unknown>" }
-                    ?: "Unknown Album"
+                    ?: "未知专辑"
 
                 val bitrate = metadataExtractor.extractBitrate(filePath)
 

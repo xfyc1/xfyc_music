@@ -37,13 +37,13 @@ fun QueueSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Queue (${queueSongs.size})",
+                    text = "播放队列 (${queueSongs.size})",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold
                 )
                 if (queueSongs.isNotEmpty()) {
                     TextButton(onClick = { viewModel.clearQueue() }) {
-                        Text("Clear all")
+                        Text("清空")
                     }
                 }
             }
@@ -58,7 +58,7 @@ fun QueueSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Queue is empty",
+                        text = "队列为空",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -87,7 +87,7 @@ fun QueueSheet(
                                 if (isCurrentSong) {
                                     Icon(
                                         Icons.Default.PlayArrow,
-                                        contentDescription = "Now playing",
+                                        contentDescription = "正在播放",
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                 } else {
@@ -102,7 +102,7 @@ fun QueueSheet(
                                 IconButton(onClick = {
                                     viewModel.removeFromQueue(index)
                                 }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Remove")
+                                    Icon(Icons.Default.Close, contentDescription = "移除")
                                 }
                             },
                             modifier = Modifier.clickable { onSongClick(index) }

@@ -34,10 +34,10 @@ fun PlaylistDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(playlist?.name ?: "Playlist") },
+                title = { Text(playlist?.name ?: "歌单") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                     }
                 }
             )
@@ -59,11 +59,11 @@ fun PlaylistDetailScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No songs in this playlist",
+                        text = "歌单内暂无歌曲",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
-                        text = "Add songs from the Library or Player",
+                        text = "从音乐库或播放器添加歌曲",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

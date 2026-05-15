@@ -59,12 +59,12 @@ fun HomeScreen(
                     ) {
                         StatItem(
                             icon = Icons.Default.LibraryMusic,
-                            label = "Songs",
+                            label = "歌曲",
                             value = songCount.toString()
                         )
                         StatItem(
                             icon = Icons.Default.Favorite,
-                            label = "Favorites",
+                            label = "收藏",
                             value = favoriteSongs.size.toString()
                         )
                     }
@@ -75,7 +75,7 @@ fun HomeScreen(
             if (recentSongs.isNotEmpty()) {
                 item {
                     SectionHeader(
-                        title = "Recently Played",
+                        title = "最近播放",
                         icon = Icons.Default.History,
                         onViewAll = onViewAllSongs
                     )
@@ -100,7 +100,7 @@ fun HomeScreen(
             if (favoriteSongs.isNotEmpty()) {
                 item {
                     SectionHeader(
-                        title = "Favorites",
+                        title = "收藏",
                         icon = Icons.Default.Favorite,
                         onViewAll = onViewAllFavorites
                     )
@@ -124,12 +124,12 @@ fun HomeScreen(
                     ) {
                         Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
                             Text(
-                                text = "No music yet",
+                                text = "暂无音乐",
                                 style = MaterialTheme.typography.headlineMedium
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Go to Library to scan your music files",
+                                text = "前往音乐库扫描您的音乐文件",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -167,7 +167,7 @@ private fun SectionHeader(
             )
         }
         TextButton(onClick = onViewAll) {
-            Text("View all")
+            Text("查看全部")
         }
     }
 }

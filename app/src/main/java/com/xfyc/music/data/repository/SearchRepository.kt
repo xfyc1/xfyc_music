@@ -30,7 +30,7 @@ class SearchRepository @Inject constructor(
         if (localSongs.isNotEmpty()) {
             results.add(SearchResult(
                 songs = localSongs,
-                sourceName = "Local",
+                sourceName = "本地",
                 sourceType = "local",
                 totalCount = localSongs.size
             ))

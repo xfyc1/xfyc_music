@@ -43,21 +43,21 @@ fun PlayerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Now Playing") },
+                title = { Text("正在播放") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Back")
+                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "返回")
                     }
                 },
                 actions = {
                     IconButton(onClick = { showLyrics = !showLyrics }) {
                         Icon(
                             if (showLyrics) Icons.Default.Album else Icons.Default.Lyrics,
-                            contentDescription = if (showLyrics) "Cover" else "Lyrics"
+                            contentDescription = if (showLyrics) "封面" else "歌词"
                         )
                     }
                     IconButton(onClick = onOpenQueue) {
-                        Icon(Icons.Default.QueueMusic, contentDescription = "Queue")
+                        Icon(Icons.Default.QueueMusic, contentDescription = "队列")
                     }
                 }
             )
@@ -133,7 +133,7 @@ fun PlayerScreen(
                     )
                 } ?: run {
                     Text(
-                        "No song selected",
+                        "未选择歌曲",
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -196,7 +196,7 @@ fun PlayerScreen(
                     IconButton(onClick = { viewModel.toggleFavorite() }) {
                         Icon(
                             imageVector = if (song.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Favorite",
+                            contentDescription = "收藏",
                             tint = if (song.isFavorite) MaterialTheme.colorScheme.error
                             else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -205,7 +205,7 @@ fun PlayerScreen(
 
                 currentSong?.let { song ->
                     IconButton(onClick = { onAddToPlaylist(song.id) }) {
-                        Icon(Icons.Default.PlaylistAdd, contentDescription = "Add to playlist")
+                        Icon(Icons.Default.PlaylistAdd, contentDescription = "添加到歌单")
                     }
                 }
             }

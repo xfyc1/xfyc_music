@@ -25,28 +25,47 @@ fun MusicSourceScreen(
     val sources by viewModel.sources.collectAsState()
     val isTesting by viewModel.isTesting.collectAsState()
     val testResult by viewModel.testResult.collectAsState()
+    val isImporting by viewModel.isImporting.collectAsState()
+    val importResult by viewModel.importResult.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var showQrScanner by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Dismiss dialog on successful import
+    LaunchedEffect(importResult) {
+        if (importResult?.startsWith("成功") == true) {
+            showAddDialog = false
+        }
+    }
+
+    // Show import/test results in snackbar
+    LaunchedEffect(importResult, testResult) {
+        val msg = importResult ?: testResult?.second
+        if (msg != null) {
+            snackbarHostState.showSnackbar(msg)
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Music Sources") },
+                title = { Text("音乐源") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "返回")
                     }
                 },
                 actions = {
                     IconButton(onClick = { showQrScanner = true }) {
-                        Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan QR")
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = "扫描二维码")
                     }
                     IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Add source")
+                        Icon(Icons.Default.Add, contentDescription = "添加源")
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         if (sources.isEmpty()) {
             Box(
@@ -61,16 +80,16 @@ fun MusicSourceScreen(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("No music sources configured")
+                    Text("未配置音乐源")
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "Add a URL source or import a JSON config",
+                        "添加 URL 源或导入 JSON 配置",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = { showAddDialog = true }) {
-                        Text("Add Music Source")
+                        Text("添加音乐源")
                     }
                 }
             }
@@ -96,6 +115,14 @@ fun MusicSourceScreen(
             }
         }
 
+        // Import result snackbar
+        importResult?.let { msg ->
+            LaunchedEffect(importResult) {
+                kotlinx.coroutines.delay(3000)
+                viewModel.clearImportResult()
+            }
+        }
+
         // Add source dialog
         if (showAddDialog) {
             AddMusicSourceDialog(
@@ -107,7 +134,12 @@ fun MusicSourceScreen(
                 onAddJson = { name, json ->
                     viewModel.addJsonConfigSource(name, json)
                     showAddDialog = false
-                }
+                },
+                onImportUrl = { url ->
+                    viewModel.importFromUrl(url)
+                    // Don't dismiss immediately - wait for result
+                },
+                isImporting = isImporting
             )
         }
     }
@@ -196,10 +228,10 @@ private fun SourceItem(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                     }
-                    Text("Test")
+                    Text("测试")
                 }
                 TextButton(onClick = { showDeleteConfirm = true }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text("删除", color = MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -208,15 +240,15 @@ private fun SourceItem(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Source") },
-            text = { Text("Delete \"${source.name}\"? Cached content will also be removed.") },
+            title = { Text("删除音乐源") },
+            text = { Text("删除 \"${source.name}\"？缓存内容也将被清除。") },
             confirmButton = {
                 TextButton(onClick = { onDelete(); showDeleteConfirm = false }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text("删除", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("取消") }
             }
         )
     }

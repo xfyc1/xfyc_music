@@ -42,10 +42,10 @@ object Routes {
 }
 
 sealed class BottomNavItem(val route: String, val label: String, val icon: @Composable () -> Unit) {
-    object Home : BottomNavItem(Routes.HOME, "Home", { Icon(Icons.Default.Home, contentDescription = "Home") })
-    object Library : BottomNavItem(Routes.LIBRARY, "Library", { Icon(Icons.Default.LibraryMusic, contentDescription = "Library") })
-    object Search : BottomNavItem(Routes.SEARCH, "Search", { Icon(Icons.Default.Search, contentDescription = "Search") })
-    object Settings : BottomNavItem(Routes.SETTINGS, "Settings", { Icon(Icons.Default.Settings, contentDescription = "Settings") })
+    object Home : BottomNavItem(Routes.HOME, "首页", { Icon(Icons.Default.Home, contentDescription = "首页") })
+    object Library : BottomNavItem(Routes.LIBRARY, "音乐库", { Icon(Icons.Default.LibraryMusic, contentDescription = "音乐库") })
+    object Search : BottomNavItem(Routes.SEARCH, "搜索", { Icon(Icons.Default.Search, contentDescription = "搜索") })
+    object Settings : BottomNavItem(Routes.SETTINGS, "设置", { Icon(Icons.Default.Settings, contentDescription = "设置") })
 }
 
 @Composable

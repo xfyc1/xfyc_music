@@ -54,10 +54,10 @@ class LibraryViewModel @Inject constructor(
             _isScanning.value = true
             val result = scanMusicUseCase()
             result.onSuccess { count ->
-                _scanResult.value = "Found $count songs"
+                _scanResult.value = "找到 $count 首歌曲"
                 loadData()
             }.onFailure { e ->
-                _scanResult.value = "Scan failed: ${e.message}"
+                _scanResult.value = "扫描失败：${e.message}"
             }
             _isScanning.value = false
         }

@@ -31,12 +31,12 @@ fun LibraryScreen(
     val scanResult by viewModel.scanResult.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
 
-    val tabs = listOf("Songs", "Artists", "Albums", "Playlists")
+    val tabs = listOf("歌曲", "艺术家", "专辑", "歌单")
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Library") },
+                title = { Text("音乐库") },
                 actions = {
                     if (isScanning) {
                         CircularProgressIndicator(
@@ -47,7 +47,7 @@ fun LibraryScreen(
                         )
                     }
                     IconButton(onClick = { viewModel.scanMusic() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Scan")
+                        Icon(Icons.Default.Refresh, contentDescription = "扫描")
                     }
                 }
             )
@@ -71,7 +71,7 @@ fun LibraryScreen(
                     modifier = Modifier.padding(8.dp),
                     action = {
                         TextButton(onClick = { viewModel.clearScanResult() }) {
-                            Text("OK")
+                            Text("确定")
                         }
                     }
                 ) {
@@ -110,12 +110,12 @@ private fun SongList(
     onToggleFavorite: (Long, Boolean) -> Unit
 ) {
     if (songs.isEmpty()) {
-        EmptyState("No songs found. Tap the refresh icon to scan.")
+        EmptyState("未找到歌曲。点击刷新图标进行扫描。")
     } else {
         LazyColumn {
             item {
                 Text(
-                    text = "${songs.size} songs",
+                    text = "${songs.size} 首歌曲",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -138,7 +138,7 @@ private fun ArtistList(
     onArtistClick: (String) -> Unit
 ) {
     if (artists.isEmpty()) {
-        EmptyState("No artists found")
+        EmptyState("未找到艺术家")
     } else {
         LazyColumn {
             items(artists) { artist ->
@@ -160,7 +160,7 @@ private fun AlbumList(
     onAlbumClick: (String) -> Unit
 ) {
     if (albums.isEmpty()) {
-        EmptyState("No albums found")
+        EmptyState("未找到专辑")
     } else {
         LazyColumn {
             items(albums) { album ->
@@ -182,14 +182,14 @@ private fun PlaylistTab(
     onPlaylistClick: (Long) -> Unit
 ) {
     if (playlists.isEmpty()) {
-        EmptyState("No playlists yet. Create one from the Playlist tab.")
+        EmptyState("暂无歌单。请先创建歌单。")
     } else {
         LazyColumn {
             items(playlists) { playlist ->
                 ListItem(
                     headlineContent = { Text(playlist.name) },
                     supportingContent = {
-                        Text("${playlist.songCount} songs")
+                        Text("${playlist.songCount} 首歌")
                     },
                     leadingContent = {
                         Icon(Icons.Default.PlaylistPlay, contentDescription = null)

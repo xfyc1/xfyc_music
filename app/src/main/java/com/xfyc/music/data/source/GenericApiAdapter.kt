@@ -49,7 +49,7 @@ class GenericApiAdapter @Inject constructor(
         return withContext(Dispatchers.IO) {
             try {
                 val searchUrl = source.searchUrl
-                    ?: return@withContext Result.failure(Exception("Search URL not configured"))
+                    ?: return@withContext Result.failure(Exception("搜索 URL 未配置"))
 
                 val url = searchUrl
                     .replace("{query}", java.net.URLEncoder.encode(query, "UTF-8"))
@@ -69,7 +69,7 @@ class GenericApiAdapter @Inject constructor(
         return withContext(Dispatchers.IO) {
             try {
                 val detailUrl = source.songDetailUrl
-                    ?: return@withContext Result.failure(Exception("Detail URL not configured"))
+                    ?: return@withContext Result.failure(Exception("详情 URL 未配置"))
 
                 val url = detailUrl
                     .replace("{songId}", songId)
@@ -88,7 +88,7 @@ class GenericApiAdapter @Inject constructor(
         return withContext(Dispatchers.IO) {
             try {
                 val playUrl = source.playUrl
-                    ?: return@withContext Result.failure(Exception("Play URL not configured"))
+                    ?: return@withContext Result.failure(Exception("播放 URL 未配置"))
 
                 val url = playUrl
                     .replace("{songId}", songId)
@@ -99,8 +99,22 @@ class GenericApiAdapter @Inject constructor(
                 val json = JsonParser.parseString(response)
                 if (json.isJsonObject) {
                     val obj = json.asJsonObject
+                    // Direct URL field
                     val urlField = obj.get("url") ?: obj.get("playUrl") ?: obj.get("src")
                     if (urlField != null) return@withContext Result.success(urlField.asString)
+                    // LX Music style: data field might be a URL string or an object with url
+                    val dataField = obj.get("data")
+                    if (dataField != null) {
+                        if (dataField.isJsonPrimitive) {
+                            return@withContext Result.success(dataField.asString)
+                        }
+                        if (dataField.isJsonObject) {
+                            val dataObj = dataField.asJsonObject
+                            val nestedUrl = dataObj.get("url") ?: dataObj.get("playUrl")
+                                ?: dataObj.get("src")
+                            if (nestedUrl != null) return@withContext Result.success(nestedUrl.asString)
+                        }
+                    }
                 }
                 // Otherwise return the request URL itself
                 Result.success(url)
@@ -114,7 +128,7 @@ class GenericApiAdapter @Inject constructor(
         return withContext(Dispatchers.IO) {
             try {
                 val coverUrl = source.coverUrl
-                    ?: return@withContext Result.failure(Exception("Cover URL not configured"))
+                    ?: return@withContext Result.failure(Exception("封面 URL 未配置"))
 
                 val url = coverUrl
                     .replace("{songId}", songId)
@@ -170,9 +184,9 @@ class GenericApiAdapter @Inject constructor(
             .build()
         val response = client.newCall(request).execute()
         if (!response.isSuccessful) {
-            throw Exception("HTTP ${response.code}: ${response.message}")
+            throw Exception("HTTP ${response.code}：${response.message}")
         }
-        return response.body?.string() ?: throw Exception("Empty response body")
+        return response.body?.string() ?: throw Exception("响应内容为空")
     }
 
     private fun parseSearchResponse(source: MusicSourceEntity, json: String, query: String): List<Song> {
@@ -180,9 +194,15 @@ class GenericApiAdapter @Inject constructor(
         val items: JsonArray? = when {
             root.isJsonObject -> {
                 val obj = root.asJsonObject
+                // Try direct array fields first
                 obj.getAsJsonArray("data") ?: obj.getAsJsonArray("result")
                 ?: obj.getAsJsonArray("results") ?: obj.getAsJsonArray("songs")
                 ?: obj.getAsJsonArray("items") ?: obj.getAsJsonArray("list")
+                // LX Music style: data is an object containing a list
+                ?: obj.getAsJsonObject("data")?.let { dataObj ->
+                    dataObj.getAsJsonArray("list") ?: dataObj.getAsJsonArray("songs")
+                    ?: dataObj.getAsJsonArray("items") ?: dataObj.getAsJsonArray("results")
+                }
             }
             root.isJsonArray -> root.asJsonArray
             else -> return emptyList()
@@ -197,7 +217,7 @@ class GenericApiAdapter @Inject constructor(
         val root = JsonParser.parseString(json)
         val obj = when {
             root.isJsonObject -> root.asJsonObject
-            else -> throw Exception("Invalid response format")
+            else -> throw Exception("无效的响应格式")
         }
         val data = obj.getAsJsonObject("data") ?: obj
         return parseSongFromJson(source, data, source.name)
@@ -205,17 +225,23 @@ class GenericApiAdapter @Inject constructor(
     }
 
     private fun parseSongFromJson(source: MusicSourceEntity, obj: JsonObject, sourceName: String): Song {
-        val id = obj.getString("id") ?: obj.getString("songId") ?: ""
-        val title = obj.getString("title") ?: obj.getString("name") ?: "Unknown"
-        val artist = obj.getString("artist") ?: obj.getString("singer") ?: "Unknown"
-        val album = obj.getString("album") ?: obj.getString("albumName") ?: ""
-        val duration = obj.getLong("duration") ?: obj.getLong("durationMs") ?: 0L
+        val id = obj.getString("id") ?: obj.getString("songId")
+            ?: obj.getString("hash") ?: obj.getString("songmid") ?: ""
+        val title = obj.getString("title") ?: obj.getString("name")
+            ?: obj.getString("songName") ?: "未知歌曲"
+        val artist = obj.getString("artist") ?: obj.getString("singer")
+            ?: obj.getString("author") ?: obj.getString("artists") ?: "未知艺术家"
+        val album = obj.getString("album") ?: obj.getString("albumName")
+            ?: obj.getString("albumname") ?: ""
+        val duration = obj.getLong("duration") ?: obj.getLong("durationMs")
+            ?: obj.getLong("interval") ?: 0L
 
         val cover = obj.getString("cover") ?: obj.getString("coverUrl")
             ?: obj.getString("picUrl") ?: obj.getString("imageUrl")
+            ?: obj.getString("img") ?: obj.getString("imgUrl")
 
         val lyric = obj.getString("lyric") ?: obj.getString("lyricUrl")
-            ?: obj.getString("lrcUrl")
+            ?: obj.getString("lrcUrl") ?: obj.getString("lrc")
 
         return Song(
             id = 0,

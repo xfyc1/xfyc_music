@@ -28,7 +28,7 @@ fun PlayControls(
         ) {
             Icon(
                 imageVector = Icons.Default.SkipPrevious,
-                contentDescription = "Previous",
+                contentDescription = "上一首",
                 modifier = Modifier.size(36.dp)
             )
         }
@@ -44,7 +44,7 @@ fun PlayControls(
         ) {
             Icon(
                 imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = if (isPlaying) "Pause" else "Play",
+                contentDescription = if (isPlaying) "暂停" else "播放",
                 modifier = Modifier.size(36.dp)
             )
         }
@@ -57,7 +57,7 @@ fun PlayControls(
         ) {
             Icon(
                 imageVector = Icons.Default.SkipNext,
-                contentDescription = "Next",
+                contentDescription = "下一首",
                 modifier = Modifier.size(36.dp)
             )
         }

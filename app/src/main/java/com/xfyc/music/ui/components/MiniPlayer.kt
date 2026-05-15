@@ -74,14 +74,14 @@ fun MiniPlayer(
                 IconButton(onClick = onPlayPause) {
                     Icon(
                         imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) "Pause" else "Play"
+                        contentDescription = if (isPlaying) "暂停" else "播放"
                     )
                 }
 
                 IconButton(onClick = onSkipNext) {
                     Icon(
                         imageVector = Icons.Default.SkipNext,
-                        contentDescription = "Next"
+                        contentDescription = "下一首"
                     )
                 }
             }

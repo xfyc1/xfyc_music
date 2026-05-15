@@ -27,7 +27,7 @@ fun SettingsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Settings") })
+            TopAppBar(title = { Text("设置") })
         }
     ) { padding ->
         LazyColumn(
@@ -37,12 +37,12 @@ fun SettingsScreen(
         ) {
             // Playback section
             item {
-                SectionTitle("Playback")
+                SectionTitle("播放")
             }
 
             item {
                 ListItem(
-                    headlineContent = { Text("Default play mode") },
+                    headlineContent = { Text("默认播放模式") },
                     supportingContent = { Text(defaultPlayMode.name) },
                     leadingContent = {
                         Icon(Icons.Default.Repeat, contentDescription = null)
@@ -53,7 +53,7 @@ fun SettingsScreen(
 
             item {
                 ListItem(
-                    headlineContent = { Text("Auto-pause on headset disconnect") },
+                    headlineContent = { Text("耳机断开时自动暂停") },
                     leadingContent = {
                         Icon(Icons.Default.HeadsetOff, contentDescription = null)
                     },
@@ -68,13 +68,13 @@ fun SettingsScreen(
 
             // Scanning section
             item {
-                SectionTitle("Scanning")
+                SectionTitle("扫描")
             }
 
             item {
                 ListItem(
-                    headlineContent = { Text("Auto-scan on startup") },
-                    supportingContent = { Text("Scan media library when app starts") },
+                    headlineContent = { Text("启动时自动扫描") },
+                    supportingContent = { Text("应用启动时扫描媒体库") },
                     leadingContent = {
                         Icon(Icons.Default.Refresh, contentDescription = null)
                     },
@@ -89,12 +89,12 @@ fun SettingsScreen(
 
             // Appearance section
             item {
-                SectionTitle("Appearance")
+                SectionTitle("外观")
             }
 
             item {
                 ListItem(
-                    headlineContent = { Text("Theme") },
+                    headlineContent = { Text("主题") },
                     supportingContent = { Text(themeMode.replaceFirstChar { it.uppercase() }) },
                     leadingContent = {
                         Icon(Icons.Default.DarkMode, contentDescription = null)
@@ -105,13 +105,13 @@ fun SettingsScreen(
 
             // About section
             item {
-                SectionTitle("About")
+                SectionTitle("关于")
             }
 
             item {
                 ListItem(
                     headlineContent = { Text("Xfyc Music") },
-                    supportingContent = { Text("Version 1.0.0") },
+                    supportingContent = { Text("版本 1.0.0") },
                     leadingContent = {
                         Icon(Icons.Default.Info, contentDescription = null)
                     }
@@ -123,7 +123,7 @@ fun SettingsScreen(
                 item {
                     AlertDialog(
                         onDismissRequest = { showPlayModeMenu = false },
-                        title = { Text("Default Play Mode") },
+                        title = { Text("默认播放模式") },
                         text = {
                             Column {
                                 PlayMode.entries.forEach { mode ->
@@ -146,10 +146,10 @@ fun SettingsScreen(
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = when (mode) {
-                                                PlayMode.SEQUENTIAL -> "Sequential"
-                                                PlayMode.SINGLE_LOOP -> "Single Loop"
-                                                PlayMode.LIST_LOOP -> "List Loop"
-                                                PlayMode.SHUFFLE -> "Shuffle"
+                                                PlayMode.SEQUENTIAL -> "顺序播放"
+                                                PlayMode.SINGLE_LOOP -> "单曲循环"
+                                                PlayMode.LIST_LOOP -> "列表循环"
+                                                PlayMode.SHUFFLE -> "随机播放"
                                             },
                                             modifier = Modifier.padding(vertical = 8.dp)
                                         )
@@ -159,7 +159,7 @@ fun SettingsScreen(
                         },
                         confirmButton = {
                             TextButton(onClick = { showPlayModeMenu = false }) {
-                                Text("OK")
+                                Text("确定")
                             }
                         }
                     )
@@ -172,7 +172,7 @@ fun SettingsScreen(
                     val themes = listOf("system", "light", "dark")
                     AlertDialog(
                         onDismissRequest = { showThemeMenu = false },
-                        title = { Text("Theme") },
+                        title = { Text("主题") },
                         text = {
                             Column {
                                 themes.forEach { theme ->
@@ -203,7 +203,7 @@ fun SettingsScreen(
                         },
                         confirmButton = {
                             TextButton(onClick = { showThemeMenu = false }) {
-                                Text("OK")
+                                Text("确定")
                             }
                         }
                     )

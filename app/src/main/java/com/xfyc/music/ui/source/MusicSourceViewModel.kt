@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xfyc.music.data.local.entity.MusicSourceEntity
 import com.xfyc.music.data.repository.MusicSourceRepository
+import com.xfyc.music.data.source.LxMusicImporter
 import com.xfyc.music.domain.model.MusicSource
 import com.xfyc.music.domain.model.toDomainModel
 import com.xfyc.music.domain.usecase.MusicSourceUseCase
@@ -15,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MusicSourceViewModel @Inject constructor(
     private val musicSourceRepository: MusicSourceRepository,
-    private val musicSourceUseCase: MusicSourceUseCase
+    private val musicSourceUseCase: MusicSourceUseCase,
+    private val lxMusicImporter: LxMusicImporter
 ) : ViewModel() {
 
     private val _sources = MutableStateFlow<List<MusicSource>>(emptyList())
@@ -93,8 +95,8 @@ class MusicSourceViewModel @Inject constructor(
 
             val result = musicSourceUseCase.testConnection(id)
             val msg = result.fold(
-                onSuccess = { "Connection successful" },
-                onFailure = { "Failed: ${it.message}" }
+                onSuccess = { "连接成功" },
+                onFailure = { "连接失败：${it.message}" }
             )
             _testResult.value = Pair(id, msg)
 
@@ -105,6 +107,33 @@ class MusicSourceViewModel @Inject constructor(
 
     fun clearTestResult() {
         _testResult.value = null
+    }
+
+    private val _isImporting = MutableStateFlow(false)
+    val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
+
+    private val _importResult = MutableStateFlow<String?>(null)
+    val importResult: StateFlow<String?> = _importResult.asStateFlow()
+
+    fun importFromUrl(url: String) {
+        viewModelScope.launch {
+            _isImporting.value = true
+            _importResult.value = null
+            val result = lxMusicImporter.importFromUrl(url)
+            result.onSuccess { sources ->
+                sources.forEach { source ->
+                    musicSourceUseCase.addSource(source)
+                }
+                _importResult.value = "成功导入 ${sources.size} 个音乐源"
+            }.onFailure { e ->
+                _importResult.value = "导入失败：${e.message}"
+            }
+            _isImporting.value = false
+        }
+    }
+
+    fun clearImportResult() {
+        _importResult.value = null
     }
 
     private fun buildUrl(baseUrl: String, path: String): String? {

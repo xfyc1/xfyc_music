@@ -30,10 +30,10 @@ fun PlaylistScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Playlists") },
+                title = { Text("歌单") },
                 actions = {
                     IconButton(onClick = { showCreateDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Create playlist")
+                        Icon(Icons.Default.Add, contentDescription = "创建歌单")
                     }
                 }
             )
@@ -55,12 +55,12 @@ fun PlaylistScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No playlists yet",
+                        text = "暂无歌单",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(onClick = { showCreateDialog = true }) {
-                        Text("Create your first playlist")
+                        Text("创建第一个歌单")
                     }
                 }
             }
@@ -80,13 +80,13 @@ fun PlaylistScreen(
         if (showCreateDialog) {
             AlertDialog(
                 onDismissRequest = { showCreateDialog = false },
-                title = { Text("New Playlist") },
+                title = { Text("新建歌单") },
                 text = {
                     Column {
                         OutlinedTextField(
                             value = newPlaylistName,
                             onValueChange = { newPlaylistName = it },
-                            label = { Text("Name") },
+                            label = { Text("名称") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -94,7 +94,7 @@ fun PlaylistScreen(
                         OutlinedTextField(
                             value = newPlaylistDesc,
                             onValueChange = { newPlaylistDesc = it },
-                            label = { Text("Description (optional)") },
+                            label = { Text("描述（可选）") },
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -110,12 +110,12 @@ fun PlaylistScreen(
                             }
                         }
                     ) {
-                        Text("Create")
+                        Text("创建")
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showCreateDialog = false }) {
-                        Text("Cancel")
+                        Text("取消")
                     }
                 }
             )
@@ -137,14 +137,14 @@ private fun PlaylistItem(
             if (playlist.description.isNotBlank()) {
                 Text(playlist.description)
             }
-            Text("${playlist.songCount} songs")
+            Text("${playlist.songCount} 首歌")
         },
         leadingContent = {
             Icon(Icons.Default.PlaylistPlay, contentDescription = null)
         },
         trailingContent = {
             IconButton(onClick = { showDeleteConfirm = true }) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                Icon(Icons.Default.Delete, contentDescription = "删除")
             }
         },
         modifier = Modifier.clickable(onClick = onClick)
@@ -153,19 +153,19 @@ private fun PlaylistItem(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Playlist") },
-            text = { Text("Delete \"${playlist.name}\"? This cannot be undone.") },
+            title = { Text("删除歌单") },
+            text = { Text("删除 \"${playlist.name}\"？此操作无法撤销。") },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete()
                     showDeleteConfirm = false
                 }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text("删除", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
+                    Text("取消")
                 }
             }
         )
