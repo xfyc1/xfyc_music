@@ -13,12 +13,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.xfyc.music.domain.model.SearchResult
+import com.xfyc.music.domain.model.Song
 import com.xfyc.music.ui.components.SongItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
-    onSongClick: (Long, SearchResult) -> Unit,
+    onSongClick: (Song, SearchResult) -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: SearchViewModel = hiltViewModel()
 ) {
@@ -107,7 +108,7 @@ fun SearchScreen(
                         items(result.songs) { song ->
                             SongItem(
                                 song = song,
-                                onClick = { onSongClick(song.id, result) }
+                                onClick = { onSongClick(song, result) }
                             )
                         }
                     }

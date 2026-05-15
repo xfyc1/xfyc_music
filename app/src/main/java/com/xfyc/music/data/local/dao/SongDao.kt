@@ -16,6 +16,9 @@ interface SongDao {
     @Query("SELECT * FROM songs WHERE filePath = :path LIMIT 1")
     suspend fun getSongByPath(path: String): SongEntity?
 
+    @Query("SELECT * FROM songs WHERE sourceType = 'remote' AND sourceId = :sourceId LIMIT 1")
+    suspend fun getRemoteSongBySourceId(sourceId: String): SongEntity?
+
     @Query("SELECT * FROM songs WHERE isFavorite = 1 ORDER BY title ASC")
     fun getFavoriteSongs(): Flow<List<SongEntity>>
 

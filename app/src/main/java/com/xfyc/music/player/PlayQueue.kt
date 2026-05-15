@@ -37,8 +37,18 @@ class PlayQueue @Inject constructor() {
         }
 
     fun setQueue(songIds: List<Long>, startIndex: Int = 0) {
+        if (songIds.isEmpty()) {
+            _songs.value = emptyList()
+            _currentIndex.value = -1
+            return
+        }
+
+        val targetIndex = startIndex.coerceIn(songIds.indices)
         _songs.value = songIds.toList()
-        _currentIndex.value = startIndex.coerceIn(0, (songIds.size - 1).coerceAtLeast(0))
+        if (_currentIndex.value == targetIndex) {
+            _currentIndex.value = -1
+        }
+        _currentIndex.value = targetIndex
         if (_playMode.value == PlayMode.SHUFFLE) {
             generateShuffleOrder()
         }

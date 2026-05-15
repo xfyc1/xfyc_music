@@ -1,18 +1,25 @@
 package com.xfyc.music.ui.player
 
+import android.content.ComponentName
+import android.content.Context
+import androidx.core.content.ContextCompat
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xfyc.music.data.cover.CoverLoader
 import com.xfyc.music.data.local.entity.SongEntity
 import com.xfyc.music.data.lyric.LyricLoader
-import com.xfyc.music.data.repository.MusicSourceRepository
 import com.xfyc.music.data.repository.SettingsRepository
 import com.xfyc.music.data.repository.SongRepository
 import com.xfyc.music.domain.model.PlayMode
 import com.xfyc.music.domain.model.Song
 import com.xfyc.music.domain.model.toDomainModel
+import com.xfyc.music.player.MusicService
 import com.xfyc.music.player.PlayQueue
 import com.xfyc.music.player.PlayerController
+import com.google.common.util.concurrent.ListenableFuture
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -20,13 +27,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val playerController: PlayerController,
     val playQueue: PlayQueue,
     private val songRepository: SongRepository,
     private val settingsRepository: SettingsRepository,
     private val lyricLoader: LyricLoader,
-    private val coverLoader: CoverLoader,
-    private val musicSourceRepository: MusicSourceRepository
+    private val coverLoader: CoverLoader
 ) : ViewModel() {
 
     val isPlaying: StateFlow<Boolean> = playerController.isPlaying
@@ -55,6 +62,9 @@ class PlayerViewModel @Inject constructor(
 
     private val _coverData = MutableStateFlow<ByteArray?>(null)
     val coverData: StateFlow<ByteArray?> = _coverData.asStateFlow()
+
+    private var controllerFuture: ListenableFuture<MediaController>? = null
+    private var mediaController: MediaController? = null
 
     init {
         viewModelScope.launch {
@@ -130,35 +140,33 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch {
             if (song.isLocal) {
                 songRepository.setLastPlayed(song.id)
-                val entity = songRepository.getSongById(song.id) ?: return@launch
-                playerController.playSong(entity)
-                _currentSong.value = song
+                playSongIds(listOf(song.id), 0)
             } else {
-                // Remote song - resolve play URL from source
-                val sourceId = song.sourceId
-                if (sourceId != null) {
-                    val playUrlResult = musicSourceRepository.getPlayUrl(
-                        // Try to extract the source database ID from the song
-                        // For remote songs from search, sourceId is the remote song ID
-                        sourceId = 0, // placeholder — will need proper source tracking
-                        songRemoteId = sourceId
-                    )
-                    playUrlResult.onSuccess { url ->
-                        val playableSong = song.copy(playUrl = url)
-                        playerController.playRemoteSong(playableSong)
-                        _currentSong.value = playableSong
-                    }
-                } else {
-                    // Direct URL play
-                    playerController.playRemoteSong(song)
-                    _currentSong.value = song
-                }
+                val songId = songRepository.upsertRemoteSong(song)
+                playSongIds(listOf(songId), 0)
             }
         }
     }
 
     fun playQueue(songs: List<Song>, startIndex: Int = 0) {
-        playQueue.setQueue(songs.map { it.id }, startIndex)
+        viewModelScope.launch {
+            val ids = songs.mapNotNull { song ->
+                if (song.isLocal) {
+                    song.id
+                } else {
+                    songRepository.upsertRemoteSong(song)
+                }
+            }
+            if (ids.isNotEmpty()) {
+                playSongIds(ids, startIndex)
+            }
+        }
+    }
+
+    fun playSongIds(songIds: List<Long>, startIndex: Int = 0) {
+        if (songIds.isEmpty()) return
+        connectPlaybackService()
+        playQueue.setQueue(songIds, startIndex.coerceIn(songIds.indices))
     }
 
     fun addToQueue(song: Song) {
@@ -177,6 +185,22 @@ class PlayerViewModel @Inject constructor(
             settingsRepository.saveLastPlayPosition(playerController.currentPosition)
             settingsRepository.savePlayQueueIds(playQueue.getSongIds())
         }
+        mediaController?.release()
         super.onCleared()
+    }
+
+    private fun connectPlaybackService() {
+        if (mediaController != null || controllerFuture != null) return
+
+        val token = SessionToken(context, ComponentName(context, MusicService::class.java))
+        val future = MediaController.Builder(context, token).buildAsync()
+        controllerFuture = future
+        future.addListener(
+            {
+                mediaController = future.get()
+                controllerFuture = null
+            },
+            ContextCompat.getMainExecutor(context)
+        )
     }
 }

@@ -1,6 +1,7 @@
 package com.xfyc.music.data.repository
 
 import com.xfyc.music.data.local.dao.SongDao
+import com.xfyc.music.data.local.entity.MusicSourceEntity
 import com.xfyc.music.domain.model.SearchResult
 import com.xfyc.music.domain.model.Song
 import com.xfyc.music.domain.model.toDomainModel
@@ -37,11 +38,7 @@ class SearchRepository @Inject constructor(
         }
 
         // Remote sources search
-        val enabledSources = musicSourceRepository.getEnabledSources().let { flow ->
-            var list = emptyList<com.xfyc.music.data.local.entity.MusicSourceEntity>()
-            kotlinx.coroutines.runBlocking { flow.collect { list = it; return@collect } }
-            list
-        }
+        val enabledSources = musicSourceRepository.getEnabledSources().first()
 
         for (source in enabledSources) {
             try {
@@ -49,10 +46,11 @@ class SearchRepository @Inject constructor(
                 result.onSuccess { songs ->
                     if (songs.isNotEmpty()) {
                         results.add(SearchResult(
-                            songs = songs,
+                            songs = songs.map { it.withRemoteSource(source) },
                             sourceName = source.name,
                             sourceType = source.type,
-                            totalCount = songs.size
+                            totalCount = songs.size,
+                            sourceId = source.id
                         ))
                     }
                 }
@@ -60,5 +58,13 @@ class SearchRepository @Inject constructor(
         }
 
         return results
+    }
+
+    private fun Song.withRemoteSource(source: MusicSourceEntity): Song {
+        val remoteSongId = sourceId
+        return copy(
+            sourceType = "remote",
+            sourceId = remoteSongId?.let { musicSourceRepository.encodeRemoteSourceId(source.id, it) }
+        )
     }
 }

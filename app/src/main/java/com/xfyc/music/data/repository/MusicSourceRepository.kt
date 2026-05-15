@@ -13,6 +13,18 @@ class MusicSourceRepository @Inject constructor(
     private val musicSourceDao: MusicSourceDao,
     private val sourceAdapter: MusicSourceAdapter
 ) {
+    fun encodeRemoteSourceId(sourceId: Long, songRemoteId: String): String {
+        return "$sourceId:$songRemoteId"
+    }
+
+    fun decodeRemoteSourceId(encoded: String?): Pair<Long, String>? {
+        val value = encoded ?: return null
+        val parts = value.split(":", limit = 2)
+        if (parts.size != 2) return null
+        val sourceId = parts[0].toLongOrNull() ?: return null
+        val songRemoteId = parts[1].takeIf { it.isNotBlank() } ?: return null
+        return sourceId to songRemoteId
+    }
 
     fun getAllSources(): Flow<List<MusicSourceEntity>> = musicSourceDao.getAllSources()
 

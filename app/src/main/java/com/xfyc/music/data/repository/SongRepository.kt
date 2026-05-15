@@ -3,6 +3,7 @@ package com.xfyc.music.data.repository
 import com.xfyc.music.data.local.dao.SongDao
 import com.xfyc.music.data.local.entity.SongEntity
 import com.xfyc.music.data.scanner.MediaScanner
+import com.xfyc.music.domain.model.Song
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,6 +32,9 @@ class SongRepository @Inject constructor(
 
     suspend fun getSongById(id: Long): SongEntity? = songDao.getSongById(id)
 
+    suspend fun getRemoteSongBySourceId(sourceId: String): SongEntity? =
+        songDao.getRemoteSongBySourceId(sourceId)
+
     suspend fun getSongCount(): Int = songDao.getSongCount()
 
     suspend fun setFavorite(id: Long, favorite: Boolean) = songDao.setFavorite(id, favorite)
@@ -38,6 +42,25 @@ class SongRepository @Inject constructor(
     suspend fun setLastPlayed(id: Long) = songDao.setLastPlayed(id)
 
     suspend fun deleteSong(id: Long) = songDao.deleteSong(id)
+
+    suspend fun updateSong(song: SongEntity) = songDao.updateSong(song)
+
+    suspend fun upsertRemoteSong(song: Song): Long {
+        val sourceId = song.sourceId ?: return songDao.insertSong(song.toRemoteEntity())
+        val existing = songDao.getRemoteSongBySourceId(sourceId)
+        if (existing != null) {
+            songDao.updateSong(
+                song.toRemoteEntity().copy(
+                    id = existing.id,
+                    isFavorite = existing.isFavorite,
+                    lastPlayedAt = existing.lastPlayedAt,
+                    createdAt = existing.createdAt
+                )
+            )
+            return existing.id
+        }
+        return songDao.insertSong(song.toRemoteEntity())
+    }
 
     suspend fun scanAndImport(): MediaScanner.ScanResult {
         val result = mediaScanner.scanMediaStore()
@@ -50,4 +73,21 @@ class SongRepository @Inject constructor(
     suspend fun isDuplicate(filePath: String): Boolean {
         return songDao.countByPath(filePath) > 0
     }
+
+    private fun Song.toRemoteEntity(): SongEntity = SongEntity(
+        title = title,
+        artist = artist,
+        album = album,
+        duration = duration,
+        sourceType = "remote",
+        sourceId = sourceId,
+        playUrl = playUrl,
+        coverUrl = coverUrl,
+        lyricUrl = lyricUrl,
+        format = format,
+        bitrate = bitrate,
+        fileSize = fileSize,
+        isFavorite = isFavorite,
+        lastPlayedAt = lastPlayedAt
+    )
 }

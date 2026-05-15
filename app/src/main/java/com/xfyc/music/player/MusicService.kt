@@ -6,6 +6,8 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import com.xfyc.music.data.local.entity.SongEntity
+import com.xfyc.music.data.repository.MusicSourceRepository
 import com.xfyc.music.data.repository.SettingsRepository
 import com.xfyc.music.data.repository.SongRepository
 import com.xfyc.music.domain.model.PlayMode
@@ -23,6 +25,7 @@ class MusicService : MediaSessionService() {
     @Inject lateinit var playerController: PlayerController
     @Inject lateinit var playQueue: PlayQueue
     @Inject lateinit var songRepository: SongRepository
+    @Inject lateinit var musicSourceRepository: MusicSourceRepository
     @Inject lateinit var settingsRepository: SettingsRepository
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -69,9 +72,22 @@ class MusicService : MediaSessionService() {
         serviceScope.launch {
             val songId = playQueue.songs.value.getOrNull(index) ?: return@launch
             val song = songRepository.getSongById(songId) ?: return@launch
-            playerController.playSong(song)
-            updateMetadata(song)
+            val playableSong = resolvePlayableSong(song) ?: return@launch
+            playerController.playSong(playableSong)
+            updateMetadata(playableSong)
         }
+    }
+
+    private suspend fun resolvePlayableSong(song: SongEntity): SongEntity? {
+        if (song.sourceType != "remote" || !song.playUrl.isNullOrBlank()) return song
+
+        val sourceInfo = musicSourceRepository.decodeRemoteSourceId(song.sourceId) ?: return null
+        val (sourceId, remoteSongId) = sourceInfo
+        val playUrl = musicSourceRepository.getPlayUrl(sourceId, remoteSongId).getOrNull()
+            ?: return null
+        val updatedSong = song.copy(playUrl = playUrl, updatedAt = System.currentTimeMillis())
+        songRepository.updateSong(updatedSong)
+        return updatedSong
     }
 
     private fun updateMetadata(song: com.xfyc.music.data.local.entity.SongEntity) {

@@ -2,15 +2,18 @@ package com.xfyc.music.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+val MistGreen80 = Color(0xFFB7F4D0)
+val FogGrey80 = Color(0xFFC5D2CC)
+val Coral80 = Color(0xFFFFC2A8)
 
-val Purple40 = Color(0xFF6650A4)
-val PurpleGrey40 = Color(0xFF625B71)
-val Pink40 = Color(0xFF7D5260)
+val Pine40 = Color(0xFF0F7A55)
+val Slate40 = Color(0xFF53615C)
+val Coral40 = Color(0xFFAD4B2A)
 
-val PlayerBackground = Color(0xFF121212)
-val PlayerSurface = Color(0xFF1E1E1E)
+val PlayerBackground = Color(0xFF0B1110)
+val PlayerSurface = Color(0xFF141B19)
+val PlayerSurfaceHigh = Color(0xFF1C2421)
 val PlayerOnSurface = Color(0xFFFFFFFF)
-val PlayerAccent = Color(0xFF1DB954)
+val PlayerAccent = Color(0xFF2FE08B)
+val PlayerAccentSoft = Color(0xFF9BF3C1)
+val PlayerWarm = Color(0xFFFFB08A)

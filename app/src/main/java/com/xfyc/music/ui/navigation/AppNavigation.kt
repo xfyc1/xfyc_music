@@ -141,9 +141,9 @@ fun AppNavigation(
 
             composable(Routes.SEARCH) {
                 SearchScreen(
-                    onSongClick = { songId, result ->
-                        // Load all songs from the search result into queue
-                        playerViewModel.playQueue.setQueue(result.songs.map { it.id }, 0)
+                    onSongClick = { song, result ->
+                        val index = result.songs.indexOf(song).coerceAtLeast(0)
+                        playerViewModel.playQueue(result.songs, index)
                         navController.navigate(Routes.PLAYER) { launchSingleTop = true }
                     },
                     onNavigateBack = { navController.popBackStack() }
@@ -208,6 +208,6 @@ private fun playSong(
     playerViewModel: PlayerViewModel,
     navController: androidx.navigation.NavController
 ) {
-    playerViewModel.playQueue.setQueue(listOf(songId), 0)
+    playerViewModel.playSongIds(listOf(songId), 0)
     navController.navigate(Routes.PLAYER) { launchSingleTop = true }
 }

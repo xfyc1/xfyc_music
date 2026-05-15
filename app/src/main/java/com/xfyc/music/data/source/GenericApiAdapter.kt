@@ -242,6 +242,8 @@ class GenericApiAdapter @Inject constructor(
 
         val lyric = obj.getString("lyric") ?: obj.getString("lyricUrl")
             ?: obj.getString("lrcUrl") ?: obj.getString("lrc")
+        val playUrl = obj.getString("playUrl") ?: obj.getString("url")
+            ?: obj.getString("src") ?: obj.getString("musicUrl")
 
         return Song(
             id = 0,
@@ -250,8 +252,8 @@ class GenericApiAdapter @Inject constructor(
             album = album,
             duration = duration,
             sourceType = "remote",
-            sourceId = id,
-            playUrl = null,
+            sourceId = id.takeIf { it.isNotBlank() },
+            playUrl = playUrl,
             coverUrl = cover,
             lyricUrl = lyric,
             format = "MP3",
